@@ -4,6 +4,11 @@ import RELRAD as rr
 import copy
 from concurrent.futures import ThreadPoolExecutor
 
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
 '''
 RELRAD-software, general software for reliability studies of radial power systems
     Copyright (C) 2025  Sondre Modalsli Aaberg
@@ -79,50 +84,57 @@ rr.RELRAD('SimpleTest.xlsx', 'RELRADResultsSimpleTest.xlsx', DSEBF = False, DERS
 
 ######## NYTT ##########
 
-#bus 2 med loadcurve
+# BUS 2 case E
+rr.RELRAD('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_2/RELRAD_Results_Bus2_Case_E.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#mc.MonteCarlo('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_2/MC_LC_Results_Bus2_Case_E.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
+#mc.MonteCarlo('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_2/MC_Results_Bus2_Case_E.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
 
-#rr.RELRAD('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RELRAD_Results_Bus2_Case_E_SondreModalsliAaberg.xlsx', DSEBF = False, DERS = False, createFIM=False)
-#mc.MonteCarlo('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/MonteCarlo_Results_Bus2_Case_E_Load_Curve_SondreModalsliAaberg.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
-#mc.MonteCarlo('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/MonteCarlo_Results_Bus2_Case_E_SondreModalsliAaberg.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
+# BUS 4 case A
+rr.RELRAD('Test_Systems_Verified/BUS 4 Case A.xlsx', 'Verified_Results/RBTS_Bus_4/RELRAD_Results_Bus4_Case_A.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#mc.MonteCarlo('Test_Systems_Verified/BUS 4 Case A.xlsx', 'Verified_Results/RBTS_Bus_4/MC_LC_Results_Bus4_Case_A.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
+#mc.MonteCarlo('Test_Systems_Verified/BUS 4 Case A.xlsx', 'Verified_Results/RBTS_Bus_4/MC_Results_Bus4_Case_A.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
 
-# bus 4 alle tre
-rr.RELRAD('Test_Systems_Verified/BUS 4 Case A.xlsx', 'Verified_Results/RELRAD_Results_Bus4_Case_A_SondreModalsliAaberg.xlsx', DSEBF = False, DERS = False, createFIM=False)
-mc.MonteCarlo('Test_Systems_Verified/BUS 4 Case A.xlsx', 'Verified_Results/MonteCarlo_Results_Bus4_Case_A_Load_Curve_SondreModalsliAaberg.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
-mc.MonteCarlo('Test_Systems_Verified/BUS 4 Case A.xlsx', 'Verified_Results/MonteCarlo_Results_Bus4_Case_A_SondreModalsliAaberg.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-import os
+# BUS 6 
+rr.RELRAD('Test_Systems_Verified/BUS 6_final.xlsx', 'Verified_Results/RBTS_Bus_6/RELRAD_Results_Bus6.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#mc.MonteCarlo('Test_Systems_Verified/BUS 6_final.xlsx', 'Verified_Results/RBTS_Bus_6/MC_LC_Results_Bus6.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
+#mc.MonteCarlo('Test_Systems_Verified/BUS 6_final.xlsx', 'Verified_Results/RBTS_Bus_6/MC_Results_Bus6.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
 
-def compare_bus_case(bus=2, case='E',
-                     reference_values=[0.248, 0.77, 3.08, 8.844],
-                     results_folder='Verified_Results', save_fig=True):
+
+# RBMC p214
+rr.RELRAD('Test_Systems_Verified/RBMC p214.xlsx', 'Verified_Results/RBMC_p214/RELRAD_Results_RBMC_p214.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#mc.MonteCarlo('Test_Systems_Verified/RBMC p214.xlsx', 'Verified_Results/RBMC_p214/MC_LC_Results_RBMC_p214.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
+#mc.MonteCarlo('Test_Systems_Verified/RBMC p214.xlsx', 'Verified_Results/RBMC_p214/MC_Results_RBMC_p214.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
+
+
+def compare_manual_results(
+    relrad_path,
+    mcs_path,
+    mcs_loadcurve_path,
+    reference_values=[0.248, 0.77, 3.08, 8.844],
+    title="Reliability Indices Comparison – RBMC p214",
+    save_folder="Verified_Results",
+    save_fig=True
+):
     """
-    Sammenligner SAIFI, SAIDI, CAIDI og EENS mellom RELRAD, MCS, MCS (med load curve) og referanse.
-    Viser N og β direkte under hver metode i legenden nederst.
+    Compares SAIFI, SAIDI, CAIDI, and EENS between RELRAD, MCS, MCS (Load Curve), and reference.
+    If one reference value is 'no reference' or None, that metric is plotted without reference comparison.
     """
 
-    # Filnavn
-    relrad_file = f"RELRAD_Results_Bus{bus}_Case_{case}_SondreModalsliAaberg.xlsx"
-    mcs_file = f"MonteCarlo_Results_Bus{bus}_Case_{case}_SondreModalsliAaberg.xlsx"
-    mcs_loadcurve_file = f"MonteCarlo_Results_Bus{bus}_Case_{case}_Load_Curve_SondreModalsliAaberg.xlsx"
+    def safe_read_excel(path):
+        if not os.path.exists(path):
+            print(f"File not found: {path}")
+            return None
+        return pd.read_excel(path, sheet_name="Load Points", index_col=0)
 
-    relrad_path = os.path.join(results_folder, relrad_file)
-    mcs_path = os.path.join(results_folder, mcs_file)
-    mcs_loadcurve_path = os.path.join(results_folder, mcs_loadcurve_file)
+    relrad_df = safe_read_excel(relrad_path)
+    mcs_df = safe_read_excel(mcs_path)
+    mcs_loadcurve_df = safe_read_excel(mcs_loadcurve_path)
 
-    # Les Excel
-    relrad_df = pd.read_excel(relrad_path, sheet_name="Load Points", index_col=0)
-    mcs_df = pd.read_excel(mcs_path, sheet_name="Load Points", index_col=0) if os.path.exists(mcs_path) else None
-    mcs_loadcurve_df = pd.read_excel(mcs_loadcurve_path, sheet_name="Load Points", index_col=0) if os.path.exists(mcs_loadcurve_path) else None
-
-    # Hent TOTAL-rader
     relrad_total = relrad_df.loc['TOTAL', ['SAIFI', 'SAIDI', 'CAIDI', 'EENS']].astype(float).values
     mcs_total = mcs_df.loc['TOTAL', ['SAIFI', 'SAIDI', 'CAIDI', 'EENS']].astype(float).values if mcs_df is not None else [np.nan]*4
     mcs_loadcurve_total = mcs_loadcurve_df.loc['TOTAL', ['SAIFI', 'SAIDI', 'CAIDI', 'EENS']].astype(float).values if mcs_loadcurve_df is not None else [np.nan]*4
 
-    # Hent N og β
     def extract_info(df):
         if df is None:
             return None, None
@@ -142,15 +154,22 @@ def compare_bus_case(bus=2, case='E',
     mcs_n, mcs_beta = extract_info(mcs_df)
     mcs_lc_n, mcs_lc_beta = extract_info(mcs_loadcurve_df)
 
-    # Beregn prosentavvik
-    def diff(vals): 
-        return [(v / ref - 1) * 100 if not np.isnan(v) else np.nan for v, ref in zip(vals, reference_values)]
+    def diff(vals, refs):
+        diffs = []
+        for v, ref in zip(vals, refs):
+            if ref == "no reference" or ref is None:
+                diffs.append(np.nan)
+            else:
+                try:
+                    diffs.append((v / ref - 1) * 100 if ref != 0 else np.nan)
+                except Exception:
+                    diffs.append(np.nan)
+        return diffs
 
-    relrad_diff = diff(relrad_total)
-    mcs_diff = diff(mcs_total)
-    mcs_loadcurve_diff = diff(mcs_loadcurve_total)
+    relrad_diff = diff(relrad_total, reference_values)
+    mcs_diff = diff(mcs_total, reference_values)
+    mcs_loadcurve_diff = diff(mcs_loadcurve_total, reference_values)
 
-    # Enheter
     units = {
         "SAIFI": r"$\frac{f.}{\mathrm{cust.}\cdot \mathrm{yr}}$",
         "SAIDI": r"$\frac{h}{\mathrm{cust.}\cdot \mathrm{yr}}$",
@@ -163,16 +182,15 @@ def compare_bus_case(bus=2, case='E',
         'Reference': reference_values,
         'RELRAD': relrad_total,
         'MCS': mcs_total,
-        'MCS (Load Curve)': mcs_loadcurve_total
+        'MCS (Load Curve)': mcs_loadcurve_total,
     }
     colors = {
         'Reference': 'lightgray',
         'RELRAD': '#2E86C1',
         'MCS': '#28B463',
-        'MCS (Load Curve)': '#F39C12'
+        'MCS (Load Curve)': '#F39C12',
     }
 
-    # Lag 2x2 subplots
     fig, axes = plt.subplots(2, 2, figsize=(12, 8))
     axes = axes.flatten()
     width = 0.2
@@ -180,11 +198,18 @@ def compare_bus_case(bus=2, case='E',
 
     for i, metric in enumerate(metrics):
         ax = axes[i]
-        vals = [datasets[key][i] for key in datasets.keys()]
-        bars = ax.bar(x, vals, color=[colors[k] for k in datasets.keys()],
+        ref_val = reference_values[i]
+        include_ref = not (ref_val == "no reference" or ref_val is None)
+
+        current_datasets = datasets.copy()
+        if not include_ref:
+            current_datasets.pop('Reference', None)
+
+        vals = [current_datasets[key][i] for key in current_datasets.keys()]
+        bars = ax.bar(np.arange(len(current_datasets)), vals,
+                      color=[colors[k] for k in current_datasets.keys()],
                       edgecolor='black', width=width*2.5)
 
-        # Verdier på stolpene
         for j, bar in enumerate(bars):
             h = bar.get_height()
             if not np.isnan(h):
@@ -192,15 +217,15 @@ def compare_bus_case(bus=2, case='E',
                             xytext=(0, 4), textcoords="offset points",
                             ha='center', va='bottom', fontsize=9)
 
-        # Prosentavvik
-        diffs = [0, relrad_diff[i], mcs_diff[i], mcs_loadcurve_diff[i]]
-        for j, diff_val in enumerate(diffs):
-            if not np.isnan(diff_val) and j > 0:
-                ax.text(j, vals[j] + (max(vals) * 0.10),
-                        f'{diff_val:+.3f}%',
-                        ha='center', va='bottom',
-                        fontsize=9, fontweight='bold',
-                        color=colors[list(datasets.keys())[j]])
+        if include_ref:
+            diffs = [0, relrad_diff[i], mcs_diff[i], mcs_loadcurve_diff[i]]
+            for j, diff_val in enumerate(diffs):
+                if not np.isnan(diff_val) and j > 0:
+                    ax.text(j, vals[j] + (max(vals) * 0.10),
+                            f'{diff_val:+.3f}%',
+                            ha='center', va='bottom',
+                            fontsize=9, fontweight='bold',
+                            color=colors[list(current_datasets.keys())[j]])
 
         ax.set_title(f"{metric}", fontsize=11)
         ax.set_ylabel(f"{units[metric]}", fontsize=10)
@@ -208,36 +233,67 @@ def compare_bus_case(bus=2, case='E',
         ax.grid(axis='y', linestyle='--', alpha=0.6)
         ax.set_ylim(0, max(vals)*1.25)
 
-    # Felles legend nederst med N og β under
     legend_labels = list(datasets.keys())
-    # legg til N og β på MCS og MCS (Load Curve) i legend labels
     legend_labels[2] += f"\nN={int(mcs_n):,}\nβ={mcs_beta:.5f}" if mcs_n and mcs_beta else legend_labels[2]
     legend_labels[3] += f"\nN={int(mcs_lc_n):,}\nβ={mcs_lc_beta:.5f}" if mcs_lc_n and mcs_lc_beta else legend_labels[3]
     legend_colors = [colors[k] for k in datasets.keys()]
     legend_patches = [plt.Rectangle((0, 0), 1, 1, color=clr, ec='black') for clr in legend_colors]
 
-    # Tegn selve legend-boksene
-    legend = fig.legend(legend_patches, legend_labels,
-                        loc='lower center', bbox_to_anchor=(0.5, 0.01),
-                        ncol=4, fontsize=11, frameon=True)
+    fig.legend(legend_patches, legend_labels,
+               loc='lower center', bbox_to_anchor=(0.5, 0.01),
+               ncol=len(legend_labels), fontsize=11, frameon=True)
 
-    # --- Legg N og β rett under hver boks i legenden ---
-    text_y = 0.05  # vertikal plassering under boksen
-    text_fontsize = 9
-    spacing = np.linspace(0.125, 0.875, 4)  # 4 kolonner
+    fig.suptitle(title, fontsize=14, fontweight='bold', y=0.99)
 
-    # Felles tittel
-    fig.suptitle(f"Reliability Indices Comparison – RBTS Bus {bus} Case {case}",
-                 fontsize=14, fontweight='bold', y=0.99)
-
-    #plt.tight_layout(rect=[0, 0.05, 1, 0.93])
-
-    # Lagre figur
     if save_fig:
-        save_name = f"Comparison_Bus{bus}_Case_{case}_Subplots.png"
-        plt.savefig(os.path.join(results_folder, save_name), dpi=300, bbox_inches='tight')
-        print(f"Figur lagret som {save_name}")
+        save_name = os.path.join(save_folder, title.replace(" ", "_") + ".png")
+        plt.savefig(save_name, dpi=300, bbox_inches='tight')
+        print(f"Figure saved as: {save_name}")
 
     plt.show()
 
-compare_bus_case(bus=4, case='A')
+
+# RBMC p214
+compare_manual_results(
+    relrad_path="Verified_Results/RBMC_p214/RELRAD_Results_RBMC_p214.xlsx",
+    mcs_path="Verified_Results/RBMC_p214/MC_Results_RBMC_p214.xlsx",
+    mcs_loadcurve_path="Verified_Results/RBMC_p214/MC_LC_Results_RBMC_p214.xlsx",
+    reference_values=[1.23, 1.51, 1.23, "no reference"],
+    title="Reliability Indices Comparison – RBMC p214",
+    save_folder="Verified_Results/RBMC_p214",
+    save_fig=True
+)
+
+# bus 2 case E
+compare_manual_results(
+    relrad_path="Verified_Results/RBTS_Bus_2/RELRAD_Results_Bus2_Case_E.xlsx",
+    mcs_path="Verified_Results/RBTS_Bus_2/MC_Results_Bus2_Case_E.xlsx",
+    mcs_loadcurve_path="Verified_Results/RBTS_Bus_2/MC_LC_Results_Bus2_Case_E.xlsx",
+    reference_values=[0.248, 0.77, 3.08, 8.844],
+    title="Reliability Indices Comparison – RBTS Bus 2 Case E",
+    save_folder="Verified_Results/RBTS_Bus_2",
+    save_fig=True
+)
+
+# bus 4 case A
+compare_manual_results(
+    relrad_path="Verified_Results/RBTS_Bus_4/RELRAD_Results_Bus4_Case_A.xlsx",
+    mcs_path="Verified_Results/RBTS_Bus_4/MC_Results_Bus4_Case_A.xlsx",
+    mcs_loadcurve_path="Verified_Results/RBTS_Bus_4/MC_LC_Results_Bus4_Case_A.xlsx",
+    reference_values=[0.300, 3.47, 11.56, 54.293],
+    title="Reliability Indices Comparison – RBTS Bus 4 Case A",
+    save_folder="Verified_Results/RBTS_Bus_4",
+    save_fig=True
+)
+
+# bus 6 
+compare_manual_results(
+    relrad_path="Verified_Results/RBTS_Bus_6/RELRAD_Results_Bus6.xlsx",
+    mcs_path="Verified_Results/RBTS_Bus_6/MC_Results_Bus6.xlsx",
+    mcs_loadcurve_path="Verified_Results/RBTS_Bus_6/MC_LC_Results_Bus6.xlsx",
+    reference_values=[1.0067, 6.6688, 6.6247, 72.81531],
+    title="Reliability Indices Comparison – RBTS Bus 6",
+    save_folder="Verified_Results/RBTS_Bus_6",
+    save_fig=True
+)
+

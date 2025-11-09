@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 
+
+
 '''
 RELRAD-software, general software for reliability studies of radial power systems
     Copyright (C) 2025  Sondre Modalsli Aaberg
@@ -191,7 +193,6 @@ def MonteCarlo(loc, outFile, beta = 0.05, nCap = 0, DSEBF = True, DERS = False, 
         # Print and save results        
     
     system['loads'].to_excel(outFile, sheet_name='Load Points')
-
 
 
 
