@@ -82,7 +82,8 @@ rr.RELRAD('SimpleTest.xlsx', 'RELRADResultsSimpleTest.xlsx', DSEBF = False, DERS
 #rr.RELRAD('BUS 5 RELSAD MOD.xlsx', 'RELRADResultsBUS5.xlsx', DSEBF = False, DERS=False)
 #mc.MonteCarlo('BUS 5 RELSAD MOD.xlsx', 'MonteCarloResultsBUS5.xlsx', beta=0.05, DSEBF = False, LoadCurve=False, DERS=False)
 
-######## NYTT ##########
+
+######## New Simulations ########
 
 # BUS 2 case E
 rr.RELRAD('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_2/RELRAD_Results_Bus2_Case_E.xlsx', DSEBF = False, DERS = False, createFIM=False)
@@ -90,21 +91,27 @@ rr.RELRAD('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_
 #mc.MonteCarlo('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_2/MC_Results_Bus2_Case_E.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
 
 # BUS 4 case A
-rr.RELRAD('Test_Systems_Verified/BUS 4 Case A.xlsx', 'Verified_Results/RBTS_Bus_4/RELRAD_Results_Bus4_Case_A.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#rr.RELRAD('Test_Systems_Verified/BUS 4 Case A.xlsx', 'Verified_Results/RBTS_Bus_4/RELRAD_Results_Bus4_Case_A.xlsx', DSEBF = False, DERS = False, createFIM=False)
 #mc.MonteCarlo('Test_Systems_Verified/BUS 4 Case A.xlsx', 'Verified_Results/RBTS_Bus_4/MC_LC_Results_Bus4_Case_A.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
 #mc.MonteCarlo('Test_Systems_Verified/BUS 4 Case A.xlsx', 'Verified_Results/RBTS_Bus_4/MC_Results_Bus4_Case_A.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
 
 
 # BUS 6 
-rr.RELRAD('Test_Systems_Verified/BUS 6_final.xlsx', 'Verified_Results/RBTS_Bus_6/RELRAD_Results_Bus6.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#rr.RELRAD('Test_Systems_Verified/BUS 6_final.xlsx', 'Verified_Results/RBTS_Bus_6/RELRAD_Results_Bus6.xlsx', DSEBF = False, DERS = False, createFIM=False)
 #mc.MonteCarlo('Test_Systems_Verified/BUS 6_final.xlsx', 'Verified_Results/RBTS_Bus_6/MC_LC_Results_Bus6.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
 #mc.MonteCarlo('Test_Systems_Verified/BUS 6_final.xlsx', 'Verified_Results/RBTS_Bus_6/MC_Results_Bus6.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
 
 
 # RBMC p214
-rr.RELRAD('Test_Systems_Verified/RBMC p214.xlsx', 'Verified_Results/RBMC_p214/RELRAD_Results_RBMC_p214.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#rr.RELRAD('Test_Systems_Verified/RBMC p214.xlsx', 'Verified_Results/RBMC_p214/RELRAD_Results_RBMC_p214.xlsx', DSEBF = False, DERS = False, createFIM=False)
 #mc.MonteCarlo('Test_Systems_Verified/RBMC p214.xlsx', 'Verified_Results/RBMC_p214/MC_LC_Results_RBMC_p214.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
 #mc.MonteCarlo('Test_Systems_Verified/RBMC p214.xlsx', 'Verified_Results/RBMC_p214/MC_Results_RBMC_p214.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
+
+
+# Simple test system
+rr.RELRAD('Test_Systems_Verified/SimpleTest.xlsx', 'Verified_Results/Simple_Test/RELRAD_Results_SimpleTest.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#mc.MonteCarlo('Test_Systems_Verified/SimpleTest.xlsx', 'Verified_Results/Simple_Test/MC_LC_Results_SimpleTest.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
+#mc.MonteCarlo('Test_Systems_Verified/SimpleTest.xlsx', 'Verified_Results/Simple_Test/MC_Results_SimpleTest.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
 
 
 def compare_manual_results(
@@ -253,6 +260,17 @@ def compare_manual_results(
     plt.show()
 
 
+# Simple test system
+compare_manual_results(
+    relrad_path="Verified_Results/Simple_Test/RELRAD_Results_SimpleTest.xlsx",
+    mcs_path="Verified_Results/Simple_Test/MC_Results_SimpleTest.xlsx",
+    mcs_loadcurve_path="Verified_Results/Simple_Test/MC_LC_Results_SimpleTest.xlsx",
+    reference_values=[2.2,  2.399,  1.090,  5.040],
+    title="Reliability Indices Comparison – Simple Test System",
+    save_folder="Verified_Results/Simple_Test",
+    save_fig=True
+)
+
 # RBMC p214
 compare_manual_results(
     relrad_path="Verified_Results/RBMC_p214/RELRAD_Results_RBMC_p214.xlsx",
@@ -296,4 +314,5 @@ compare_manual_results(
     save_folder="Verified_Results/RBTS_Bus_6",
     save_fig=True
 )
+
 

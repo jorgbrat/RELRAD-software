@@ -91,6 +91,7 @@ def RELRAD(loc, outFile, DSEBF=True, DERS=False, createFIM=False):
                     results.loc[componentTag, LP + 'l'] = system['sections']['Components'][sec][comp]['lambda']
                     results.loc[componentTag, LP + 'r'] = effectOnLPs[LP]
                     results.loc[componentTag, LP + 'U'] = system['sections']['Components'][sec][comp]['lambda'] * effectOnLPs[LP]
+                    
                     # Update load point data
                     system['loads'].loc[LP, 'Lambda'] += system['sections']['Components'][sec][comp]['lambda']
                     system['loads'].loc[LP, 'U'] += system['sections']['Components'][sec][comp]['lambda'] * effectOnLPs[LP]
