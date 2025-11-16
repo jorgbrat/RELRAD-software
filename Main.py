@@ -86,7 +86,7 @@ rr.RELRAD('SimpleTest.xlsx', 'RELRADResultsSimpleTest.xlsx', DSEBF = False, DERS
 ######## New Simulations ########
 
 # BUS 2 case E
-rr.RELRAD('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_2/RELRAD_Results_Bus2_Case_E.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#rr.RELRAD('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_2/RELRAD_Results_Bus2_Case_E.xlsx', DSEBF = False, DERS = False, createFIM=False)
 #mc.MonteCarlo('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_2/MC_LC_Results_Bus2_Case_E.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
 #mc.MonteCarlo('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_2/MC_Results_Bus2_Case_E.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
 
@@ -109,9 +109,16 @@ rr.RELRAD('Test_Systems_Verified/BUS 2 Case E.xlsx', 'Verified_Results/RBTS_Bus_
 
 
 # Simple test system
-rr.RELRAD('Test_Systems_Verified/SimpleTest.xlsx', 'Verified_Results/Simple_Test/RELRAD_Results_SimpleTest.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#rr.RELRAD('Test_Systems_Verified/SimpleTest.xlsx', 'Verified_Results/Simple_Test/RELRAD_Results_SimpleTest.xlsx', DSEBF = False, DERS = False, createFIM=False)
 #mc.MonteCarlo('Test_Systems_Verified/SimpleTest.xlsx', 'Verified_Results/Simple_Test/MC_LC_Results_SimpleTest.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
 #mc.MonteCarlo('Test_Systems_Verified/SimpleTest.xlsx', 'Verified_Results/Simple_Test/MC_Results_SimpleTest.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
+
+
+
+# Myhre 6Bus System
+#rr.RELRAD('Test_Systems_Verified/Myhre 6Bus System.xlsx', 'Verified_Results/Myhre_6bus/RELRAD_Results_Myhre6Bus.xlsx', DSEBF = False, DERS = False, createFIM=False)
+#mc.MonteCarlo('Test_Systems_Verified/Myhre 6Bus System.xlsx', 'Verified_Results/Myhre_6bus/MC_LC_Results_Myhre6Bus.xlsx', beta=0.02, DSEBF = False, LoadCurve=True, DERS=False)
+#mc.MonteCarlo('Test_Systems_Verified/Myhre 6Bus System.xlsx', 'Verified_Results/Myhre_6bus/MC_Results_Myhre6Bus.xlsx', beta=0.02, DSEBF = False, LoadCurve=False, DERS=False)
 
 
 def compare_manual_results(
@@ -119,14 +126,12 @@ def compare_manual_results(
     mcs_path,
     mcs_loadcurve_path,
     reference_values=[0.248, 0.77, 3.08, 8.844],
+    reference_values_MCS=None,   
     title="Reliability Indices Comparison – RBMC p214",
     save_folder="Verified_Results",
     save_fig=True
 ):
-    """
-    Compares SAIFI, SAIDI, CAIDI, and EENS between RELRAD, MCS, MCS (Load Curve), and reference.
-    If one reference value is 'no reference' or None, that metric is plotted without reference comparison.
-    """
+ 
 
     def safe_read_excel(path):
         if not os.path.exists(path):
@@ -134,6 +139,7 @@ def compare_manual_results(
             return None
         return pd.read_excel(path, sheet_name="Load Points", index_col=0)
 
+    # Read data
     relrad_df = safe_read_excel(relrad_path)
     mcs_df = safe_read_excel(mcs_path)
     mcs_loadcurve_df = safe_read_excel(mcs_loadcurve_path)
@@ -142,6 +148,7 @@ def compare_manual_results(
     mcs_total = mcs_df.loc['TOTAL', ['SAIFI', 'SAIDI', 'CAIDI', 'EENS']].astype(float).values if mcs_df is not None else [np.nan]*4
     mcs_loadcurve_total = mcs_loadcurve_df.loc['TOTAL', ['SAIFI', 'SAIDI', 'CAIDI', 'EENS']].astype(float).values if mcs_loadcurve_df is not None else [np.nan]*4
 
+    # Extract info for legend
     def extract_info(df):
         if df is None:
             return None, None
@@ -161,6 +168,7 @@ def compare_manual_results(
     mcs_n, mcs_beta = extract_info(mcs_df)
     mcs_lc_n, mcs_lc_beta = extract_info(mcs_loadcurve_df)
 
+    # percentage difference calculation
     def diff(vals, refs):
         diffs = []
         for v, ref in zip(vals, refs):
@@ -177,6 +185,15 @@ def compare_manual_results(
     mcs_diff = diff(mcs_total, reference_values)
     mcs_loadcurve_diff = diff(mcs_loadcurve_total, reference_values)
 
+    # If MCS reference is used
+    if reference_values_MCS is not None:
+        mcs_ref_diff = diff(mcs_total, reference_values_MCS)
+        mcs_lc_ref_diff = diff(mcs_loadcurve_total, reference_values_MCS)
+    else:
+        mcs_ref_diff = None
+        mcs_lc_ref_diff = None
+
+    # Units
     units = {
         "SAIFI": r"$\frac{f.}{\mathrm{cust.}\cdot \mathrm{yr}}$",
         "SAIDI": r"$\frac{h}{\mathrm{cust.}\cdot \mathrm{yr}}$",
@@ -185,23 +202,43 @@ def compare_manual_results(
     }
 
     metrics = ['SAIFI', 'SAIDI', 'CAIDI', 'EENS']
-    datasets = {
-        'Reference': reference_values,
-        'RELRAD': relrad_total,
-        'MCS': mcs_total,
-        'MCS (Load Curve)': mcs_loadcurve_total,
-    }
-    colors = {
-        'Reference': 'lightgray',
-        'RELRAD': '#2E86C1',
-        'MCS': '#28B463',
-        'MCS (Load Curve)': '#F39C12',
-    }
 
+    # Build dataset structure
+    if reference_values_MCS is not None:
+        datasets = {
+            'Reference': reference_values,
+            'Reference MCS': reference_values_MCS,
+            'RELRAD': relrad_total,
+            'MCS': mcs_total,
+            'MCS (Load Curve)': mcs_loadcurve_total,
+        }
+        colors = {
+            'Reference': 'lightgray',
+            'Reference MCS': 'darkgray',
+            'RELRAD': '#2E86C1',
+            'MCS': '#28B463',
+            'MCS (Load Curve)': '#F39C12',
+        }
+    else:
+        datasets = {
+            'Reference': reference_values,
+            'RELRAD': relrad_total,
+            'MCS': mcs_total,
+            'MCS (Load Curve)': mcs_loadcurve_total,
+        }
+        colors = {
+            'Reference': 'lightgray',
+            'RELRAD': '#2E86C1',
+            'MCS': '#28B463',
+            'MCS (Load Curve)': '#F39C12',
+        }
+
+    # Plotting
     fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+    fig.subplots_adjust(wspace=0.30, hspace=0.20)
+
     axes = axes.flatten()
     width = 0.2
-    x = np.arange(len(datasets))
 
     for i, metric in enumerate(metrics):
         ax = axes[i]
@@ -209,6 +246,7 @@ def compare_manual_results(
         include_ref = not (ref_val == "no reference" or ref_val is None)
 
         current_datasets = datasets.copy()
+
         if not include_ref:
             current_datasets.pop('Reference', None)
 
@@ -217,6 +255,7 @@ def compare_manual_results(
                       color=[colors[k] for k in current_datasets.keys()],
                       edgecolor='black', width=width*2.5)
 
+        # Value annotation
         for j, bar in enumerate(bars):
             h = bar.get_height()
             if not np.isnan(h):
@@ -224,25 +263,48 @@ def compare_manual_results(
                             xytext=(0, 4), textcoords="offset points",
                             ha='center', va='bottom', fontsize=9)
 
-        if include_ref:
-            diffs = [0, relrad_diff[i], mcs_diff[i], mcs_loadcurve_diff[i]]
-            for j, diff_val in enumerate(diffs):
-                if not np.isnan(diff_val) and j > 0:
-                    ax.text(j, vals[j] + (max(vals) * 0.10),
-                            f'{diff_val:+.3f}%',
-                            ha='center', va='bottom',
-                            fontsize=9, fontweight='bold',
-                            color=colors[list(current_datasets.keys())[j]])
+        if reference_values_MCS is None:
+            diffs = [0] + [relrad_diff[i], mcs_diff[i], mcs_loadcurve_diff[i]]
+        else:
 
+            ref_mcs_diff = (reference_values_MCS[i] / reference_values[i] - 1) * 100
+
+            diffs = [
+                0,                        
+                ref_mcs_diff,             
+                relrad_diff[i],           
+                mcs_ref_diff[i],          
+                mcs_lc_ref_diff[i]        
+            ]
+
+
+        for j, diff_val in enumerate(diffs):
+            if j < len(vals) and not np.isnan(diff_val) and j != 0:
+                ax.text(j, vals[j] + (max(vals) * 0.10),
+                        f'{diff_val:+.3f}%',
+                        ha='center', va='bottom',
+                        fontsize=9, fontweight='bold',
+                        color=colors[list(current_datasets.keys())[j]])
+
+        # Labels
         ax.set_title(f"{metric}", fontsize=11)
         ax.set_ylabel(f"{units[metric]}", fontsize=10)
         ax.set_xticks([])
         ax.grid(axis='y', linestyle='--', alpha=0.6)
         ax.set_ylim(0, max(vals)*1.25)
 
+    
     legend_labels = list(datasets.keys())
-    legend_labels[2] += f"\nN={int(mcs_n):,}\nβ={mcs_beta:.5f}" if mcs_n and mcs_beta else legend_labels[2]
-    legend_labels[3] += f"\nN={int(mcs_lc_n):,}\nβ={mcs_lc_beta:.5f}" if mcs_lc_n and mcs_lc_beta else legend_labels[3]
+
+    # Add N & beta to legend
+    if mcs_n and mcs_beta and "MCS" in legend_labels:
+        idx = legend_labels.index("MCS")
+        legend_labels[idx] += f"\nN={int(mcs_n):,}\nβ={mcs_beta:.5f}"
+
+    if mcs_lc_n and mcs_lc_beta and "MCS (Load Curve)" in legend_labels:
+        idx = legend_labels.index("MCS (Load Curve)")
+        legend_labels[idx] += f"\nN={int(mcs_lc_n):,}\nβ={mcs_lc_beta:.5f}"
+
     legend_colors = [colors[k] for k in datasets.keys()]
     legend_patches = [plt.Rectangle((0, 0), 1, 1, color=clr, ec='black') for clr in legend_colors]
 
@@ -258,6 +320,19 @@ def compare_manual_results(
         print(f"Figure saved as: {save_name}")
 
     plt.show()
+
+
+# Myhre 6Bus System
+compare_manual_results(
+    relrad_path="Verified_Results/Myhre_6bus/RELRAD_Results_Myhre6Bus.xlsx",
+    mcs_path="Verified_Results/Myhre_6bus/MC_Results_Myhre6Bus.xlsx",
+    mcs_loadcurve_path="Verified_Results/Myhre_6bus/MC_LC_Results_Myhre6Bus.xlsx",
+    reference_values=[0.3500, 0.9395, 2.6842, 0.0178],  
+    reference_values_MCS=[0.3441, 0.9409,  2.7365,  0.0174],
+    title="Reliability Indices Comparison – Myhre 6Bus System",
+    save_folder="Verified_Results/Myhre_6bus",
+    save_fig=True
+)
 
 
 # Simple test system
